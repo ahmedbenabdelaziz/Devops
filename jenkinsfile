@@ -1,0 +1,20 @@
+pipline{
+    agen any 
+    stages{
+        stages("checkout"){
+            steps{
+                checkout scm
+            }
+        }
+        stages("test"){
+            steps{
+                echo"dd"
+            }
+        }
+        stages("build"){
+            steps{
+                echo"r"
+            }
+        }
+    }
+}
