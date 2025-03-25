@@ -1,19 +1,19 @@
-pipline{
-    agen any 
-    stages{
-        stages("checkout"){
-            steps{
+pipeline {
+    agent any
+    stages {
+        stage('Checkout') {
+            steps {
                 checkout scm
             }
         }
-        stages("test"){
-            steps{
-                echo"dd"
+        stage('Test') {
+            steps {
+                echo 'dd'
             }
         }
-        stages("build"){
-            steps{
-                echo"r"
+        stage('Build') {
+            steps {
+                echo 'r'
             }
         }
     }
