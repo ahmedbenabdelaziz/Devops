@@ -1,19 +1,39 @@
 pipeline {
     agent any
+
+    options {
+        disableConcurrentBuilds()
+        timeout(time: 15, unit: 'MINUTES') 
+    }
+
+    triggers {
+        pollSCM('H/5 * * * *')
+    }
+
     stages {
-        stage('Checkout') {
+        stage('Checkout Code') {
             steps {
-                checkout scm
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: '*/main']],
+                    extensions: [],
+                    userRemoteConfigs: [[
+                        url: 'https://github.com/ahmedbenabdelaziz/Devops.git',
+                        credentialsId: 'a5382a2d-2dd5-4796-8165-30a4117ac67d'
+                    ]]
+                ])
             }
         }
+
         stage('Test') {
             steps {
-                echo 'dghhhhd'
-            }
-        }
-        stage('Build') {
-            steps {
-                echo 'r'
+                bat '''
+                    @echo off
+                    echo Bonjour Ahmed !
+                    echo Construction en cours...
+                    npm install
+                    npm test
+                '''
             }
         }
     }
