@@ -16,8 +16,8 @@ pipeline {
             }
         }
 
-
-     stage('Install & Test Backend') {
+        // Étape 2: Installation des dépendances et exécution des tests pour le backend
+        stage('Install & Test Backend') {
             steps {
                 dir('C:/Users/LENOVO/OneDrive/Desktop/DEVOPS/mon-projet-node') {
                     bat 'npm install'
@@ -25,6 +25,12 @@ pipeline {
                 }
             }
         }
-     
+
+        // Étape 3: Publication des résultats des tests
+        stage('Publish Test Results') {
+            steps {
+                junit '**/test-results/test-report.xml' // Chemin vers le rapport JUnit généré par Jest
+            }
+        }
     }
 }
