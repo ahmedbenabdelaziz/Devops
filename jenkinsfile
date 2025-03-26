@@ -1,11 +1,96 @@
-node {
-    stage('Build') {
-        echo 'Building...'
+pipeline {
+    agent any
+
+    environment {
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')
+        SSH_CREDENTIALS = credentials('ssh-server-creds')
+        DOCKER_REGISTRY = "ahmedabdelaziz5357580/login"
     }
-    stage('Test') {
-        echo 'Testing...'
+
+    stages {
+        // Étape 1 : Checkout du code
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main', 
+                url: 'https://github.com/ahmedbenabdelaziz/Devops.git'
+            }
+        }
+
+        // Étape 2 : Build et Test Backend (Node.js)
+        stage('Build Backend') {
+            steps {
+                dir('backend') {
+                    sh 'npm install'
+                    sh 'npm run build'
+                    sh 'npm test' // Si vous avez des tests JUnit, ajoutez junit 'test-results.xml'
+                }
+            }
+        }
+
+        // Étape 3 : Build Frontend (Flutter)
+        stage('Build Frontend') {
+            steps {
+                dir('frontend') {
+                    sh 'flutter pub get'
+                    sh 'flutter build web' // Adaptation selon votre cible
+                }
+            }
+        }
+
+        // Étape 4 : Construction des images Docker
+        stage('Build Docker Images') {
+            steps {
+                script {
+                    // Backend
+                    docker.build("${DOCKER_REGISTRY}/backend:${env.BUILD_NUMBER}", '-f backend/Dockerfile .')
+                    
+                    // Frontend
+                    docker.build("${DOCKER_REGISTRY}/frontend:${env.BUILD_NUMBER}", '-f frontend/Dockerfile .')
+                }
+            }
+        }
+
+        // Étape 5 : Push vers DockerHub
+        stage('Push to DockerHub') {
+            steps {
+                script {
+                    docker.withRegistry('https://registry.hub.docker.com', DOCKERHUB_CREDENTIALS) {
+                        docker.image("${DOCKER_REGISTRY}/backend:${env.BUILD_NUMBER}").push()
+                        docker.image("${DOCKER_REGISTRY}/frontend:${env.BUILD_NUMBER}").push()
+                    }
+                }
+            }
+        }
+
+        // Étape 6 : Déploiement via SSH
+        stage('Deploy to Production') {
+            steps {
+                sshagent([SSH_CREDENTIALS]) {
+                    // Copie des fichiers nécessaires
+                    sh 'scp docker-compose.prod.yml user@server:/app'
+
+                    // Exécution des commandes à distance
+                    sh '''
+                        ssh user@server '
+                            docker login -u ${DOCKERHUB_USR} -p ${DOCKERHUB_PSW}
+                            docker-compose -f /app/docker-compose.prod.yml pull
+                            docker-compose -f /app/docker-compose.prod.yml up -d
+                        '
+                    '''
+                }
+            }
+        }
     }
-    stage('Deploy') {
-        echo 'Deploying...'
+
+    post {
+        always {
+            cleanWs()
+        }
+        success {
+            slackSend color: 'good', message: "Déploiement réussi : ${env.BUILD_URL}"
+        }
+        failure {
+            slackSend color: 'danger', message: "Échec du déploiement : ${env.BUILD_URL}"
+        }
     }
 }
