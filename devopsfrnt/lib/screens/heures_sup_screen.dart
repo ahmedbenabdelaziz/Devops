@@ -16,7 +16,6 @@ class _HeuresSupScreenState extends State<HeuresSupScreen> {
   void calculerHeuresSup() {
     setState(() => isLoading = true);
 
-    // Simulated calculation based on the start and end dates
     try {
       final startDate = DateTime.parse(_startDateController.text);
       final endDate = DateTime.parse(_endDateController.text);
