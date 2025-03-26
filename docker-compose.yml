@@ -1,0 +1,50 @@
+version: "3.8"
+
+networks:
+  mynetwork:
+    driver: bridge
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql_container
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: employe_db
+      MYSQL_USER: myuser
+      MYSQL_PASSWORD: mypassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d
+    networks:
+      - mynetwork
+
+  backend:
+    build:
+      context: ./mon-projet-node  
+      dockerfile: Dockerfile       
+    container_name: backend_container
+    restart: always
+    depends_on:
+      - mysql
+    ports:
+      - "5000:5000"
+    environment:
+      DATABASE_URL: mysql://myuser:mypassword@mysql:3306/mydb
+    networks:
+      - mynetwork
+
+  frontend:
+    build:
+      context: ./devopsfrnt    
+      dockerfile: Dockerfile   
+    container_name: frontend_container
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
+    networks:
+      - mynetwork
