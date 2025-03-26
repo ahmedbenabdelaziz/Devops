@@ -9,27 +9,53 @@ pipeline {
     }
 
     stages {
-        // Étape 1: Récupération du code source
         stage('Checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/ahmedbenabdelaziz/Devops.git'
             }
         }
 
-        // Étape 2: Installation des dépendances et exécution des tests pour le backend
+        // Étape 2: Installation des dépendances et tests pour le backend
         stage('Install & Test Backend') {
             steps {
-                dir('C:/Users/LENOVO/OneDrive/Desktop/DEVOPS/mon-projet-node') {
+                dir('C:\\Users\\LENOVO\\OneDrive\\Desktop\\DEVOPS\\mon-projet-node') {
                     bat 'npm install'
                     bat 'npm test'  // Exécute les tests Jest
                 }
             }
         }
 
-        // Étape 3: Publication des résultats des tests
-        stage('Publish Test Results') {
+        // Étape 3: Compilation du frontend Flutter
+        stage('Build Frontend') {
             steps {
-                junit '**/test-results/test-report.xml' // Chemin vers le rapport JUnit généré par Jest
+                dir('C:\\Users\\LENOVO\\OneDrive\\Desktop\\DEVOPS\\devopsfrnt') {
+                    bat 'flutter clean'
+                    bat 'flutter pub get'
+                    bat 'flutter build web'
+                }
+            }
+        }
+        stage('Build Docker Images') {
+            steps {
+                bat 'docker build -t %BACKEND_IMAGE% C:\\Users\\LENOVO\\OneDrive\\Desktop\\DEVOPS\\mon-projet-node'
+                bat 'docker build -t %FRONTEND_IMAGE% C:\\Users\\LENOVO\\OneDrive\\Desktop\\DEVOPS\\devopsfrnt'
+            }
+        }
+
+        stage('Push Docker Images') {
+            steps {
+                withDockerRegistry([credentialsId: 'finale-dockerhub', url: 'https://index.docker.io/v1/']) {
+                    bat 'docker push %BACKEND_IMAGE%'
+                    bat 'docker push %FRONTEND_IMAGE%'
+                }
+            }
+        }
+        stage('Deploy to Server') {
+            steps {
+                bat '''
+                echo Déploiement sur le serveur distant...
+                plink -batch -ssh %REMOTE_SERVER% "cd /path/to/project/on/server && docker-compose down && docker pull %BACKEND_IMAGE% && docker pull %FRONTEND_IMAGE% && docker-compose up -d --build"
+                '''
             }
         }
     }
