@@ -32,7 +32,6 @@ class _EmployeState extends State<Employe> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Liste des Employés'),
       ),
       body: employes.isEmpty
           ? Center(child: CircularProgressIndicator())
@@ -42,6 +41,7 @@ class _EmployeState extends State<Employe> {
                 return Card(
                   margin: EdgeInsets.all(10),
                   child: ListTile(
+
                     title: Text('${employes[index]['nom']} ${employes[index]['prenom']}'),
                     subtitle: Text(employes[index]['poste']),
                   ),
