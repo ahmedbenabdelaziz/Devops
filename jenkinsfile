@@ -9,19 +9,25 @@ pipeline {
     }
 
     stages {
+        // Étape 1: Récupération du code source
         stage('Checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/ahmedbenabdelaziz/Devops.git'
             }
         }
 
-        stage('Run Tests') {  // ✅ Placé à l'intérieur de "stages"
+
+        // Étape 3: Construction et publication du Backend
+        stage('Build Backend') {
             steps {
                 dir('back') {
-                    bat 'npm install'  // Installe les dépendances
-                    bat 'npm test'     // Exécute les tests unitaires
+                    bat "docker build -t ${BACKEND_IMAGE} ."  // Utilise bat si sur Windows
+                    bat "echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin"
+                    bat "docker push ${BACKEND_IMAGE}"
                 }
             }
         }
+
+     
     }
 }
