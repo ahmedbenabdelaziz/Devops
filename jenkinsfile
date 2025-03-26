@@ -1,15 +1,15 @@
-<<<<<<< HEAD
-=======
 pipeline {
     agent any
 
     options {
+        timeout(time: 30, unit: 'MINUTES')
         disableConcurrentBuilds()
-        timeout(time: 15, unit: 'MINUTES') 
+        buildDiscarder(logRotator(numToKeepStr: '5'))
     }
 
-    triggers {
-        pollSCM('H/5 * * * *')
+    environment {
+        FRONTEND_DIR = 'devopsfrnt'
+        BACKEND_DIR = 'mon-projet-node'
     }
 
     stages {
@@ -27,17 +27,65 @@ pipeline {
             }
         }
 
-        stage('Test') {
+        stage('Build Backend') {
+            steps {
+                dir(env.BACKEND_DIR) {
+                    bat '''
+                        @echo off
+                        echo Installation des dépendances Node.js...
+                        npm install
+                        echo Construction du backend...
+                        npm run build
+                    '''
+                }
+            }
+        }
+
+        stage('Test Backend') {
+            steps {
+                dir(env.BACKEND_DIR) {
+                    bat 'npm test'
+                }
+            }
+        }
+
+        stage('Build Frontend') {
+            steps {
+                dir(env.FRONTEND_DIR) {
+                    bat '''
+                        @echo off
+                        echo Installation des dépendances Frontend...
+                        npm install
+                        echo Construction du frontend...
+                        npm run build
+                    '''
+                }
+            }
+        }
+
+        stage('Déploiement') {
+            when {
+                branch 'main'
+            }
             steps {
                 bat '''
-                    @echo off
-                    echo Bonjour Ahmed !
-                    echo Construction en cours...
-                    npm install
-                    npm test
+                    echo Déploiement en production...
+                    REM Ajouter ici vos commandes de déploiement
                 '''
             }
         }
     }
+
+    post {
+        success {
+            mail to: 'email@example.com',
+                 subject: "Build Réussi - ${currentBuild.fullDisplayName}",
+                 body: "Le build ${env.BUILD_URL} a réussi"
+        }
+        failure {
+            mail to: 'email@example.com',
+                 subject: "Build Échoué - ${currentBuild.fullDisplayName}",
+                 body: "Le build ${env.BUILD_URL} a échoué"
+        }
+    }
 }
->>>>>>> bc03a4b0c3bbd857b7e52b43c015e22dcf0ae377
