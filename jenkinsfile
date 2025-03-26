@@ -1,42 +1,10 @@
 pipeline {
     agent any
-
     stages {
-        // Étape 1 - Vérification du code
-        stage('Checkout Code') {
-            steps {
-                git url: 'https://github.com/ahmedbenabdelaziz/Devops.git', 
-                     branch: 'main'
-                sh 'ls -al' // Liste les fichiers
-            }
-        }
-
-        // Étape 2 - Build Backend (Node.js)
         stage('Build Backend') {
             steps {
-                dir('backend') {
-                    sh 'npm install'
-                    sh 'npm run build'
-                    sh 'echo "Backend build successful!"'
-                }
+                bat 'npm install && npm run build'
             }
-        }
-
-        // Étape 3 - Build Frontend (Flutter)
-        stage('Build Frontend') {
-            steps {
-                dir('frontend') {
-                    sh 'flutter pub get'
-                    sh 'flutter build web'
-                    sh 'echo "Frontend build successful!"'
-                }
-            }
-        }
-    }
-
-    post {
-        always {
-            echo 'Pipeline terminé - Voir les résultats ci-dessous'
         }
     }
 }
