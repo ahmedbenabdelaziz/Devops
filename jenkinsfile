@@ -1,9 +1,49 @@
 pipeline {
     agent any
+
     stages {
+        stage('Cleanup') {
+            steps {
+                cleanWs()
+            }
+        }
+
+        stage('Checkout Code') {
+            steps {
+                script {
+                    try {
+                        checkout scm
+                    } catch (Exception e) {
+                        error "Erreur lors du checkout: ${e}"
+                    }
+                }
+            }
+        }
+
+        stage('Verify Files') {
+            steps {
+                bat 'dir'  // Affiche le contenu du workspace pour voir si package.json est présent
+            }
+        }
+
         stage('Build Backend') {
             steps {
-                bat 'npm install && npm run build'
+                script {
+                    try {
+                        bat '''
+                            if exist package.json (
+                                echo "package.json trouvé, lancement de npm install"
+                                npm install
+                                npm run build
+                            ) else (
+                                echo "ERREUR: package.json introuvable!"
+                                exit /b 1
+                            )
+                        '''
+                    } catch (Exception e) {
+                        error "Erreur pendant la construction du backend: ${e}"
+                    }
+                }
             }
         }
     }
