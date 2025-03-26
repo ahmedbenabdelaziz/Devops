@@ -14,14 +14,14 @@ pipeline {
                 git branch: 'main', url: 'https://github.com/ahmedbenabdelaziz/Devops.git'
             }
         }
-    }
-stage('Run Tests') {
-    steps {
-        dir('back') {
-            bat 'npm install'  // Installe les dépendances
-            bat 'npm test'     // Exécute les tests unitaires
+
+        stage('Run Tests') {  // ✅ Placé à l'intérieur de "stages"
+            steps {
+                dir('back') {
+                    bat 'npm install'  // Installe les dépendances
+                    bat 'npm test'     // Exécute les tests unitaires
+                }
+            }
         }
     }
-}
-
 }
