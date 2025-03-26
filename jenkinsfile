@@ -9,13 +9,19 @@ pipeline {
     }
 
     stages {
-        // Étape 1: Récupération du code source
         stage('Checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/ahmedbenabdelaziz/Devops.git'
             }
         }
-
-  
     }
+stage('Run Tests') {
+    steps {
+        dir('back') {
+            bat 'npm install'  // Installe les dépendances
+            bat 'npm test'     // Exécute les tests unitaires
+        }
+    }
+}
+
 }
