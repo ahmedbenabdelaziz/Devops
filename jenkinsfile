@@ -16,41 +16,6 @@ pipeline {
             }
         }
 
-        // Étape 2: Construction et publication du Frontend
-        stage('Build Frontend') {
-            steps {
-                dir('devopsfrnt') {
-                    bat "docker build -t ${FRONTEND_IMAGE} ."  // Utilise bat si sur Windows
-                    bat "echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin"
-                    bat "docker push ${FRONTEND_IMAGE}"
-                }
-            }
-        }
-
-        // Étape 3: Construction et publication du Backend
-        stage('Build Backend') {
-            steps {
-                dir('back') {
-                    bat "docker build -t ${BACKEND_IMAGE} ."  // Utilise bat si sur Windows
-                    bat "echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin"
-                    bat "docker push ${BACKEND_IMAGE}"
-                }
-            }
-        }
-
-        // Étape 4: Déploiement sur le serveur distant
-        stage('Deploy') {
-            steps {
-                sshagent(['ssh-key']) {  // Assurez-vous que 'ssh-key' est bien configuré dans Jenkins
-                    bat """
-                        ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} ^ 
-                        "docker pull ${FRONTEND_IMAGE} && ^ 
-                         docker pull ${BACKEND_IMAGE} && ^ 
-                         docker-compose -f /chemin/vers/docker-compose.yml down && ^ 
-                         docker-compose -f /chemin/vers/docker-compose.yml up -d"
-                    """
-                }
-            }
-        }
+  
     }
 }
