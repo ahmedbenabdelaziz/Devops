@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')
+        DOCKERHUB_CREDENTIALS = credentials('finale-dockerhub')
         FRONTEND_IMAGE = "ahmedabdelaziz5357580/backend-app"
         BACKEND_IMAGE = "ahmedabdelaziz5357580/backend-app"
         REMOTE_SERVER = "user@serveur-distant"
