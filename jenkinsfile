@@ -19,7 +19,7 @@ pipeline {
 
      stage('Install & Test Backend') {
             steps {
-                dir('backend') {
+                dir('mon-projet-node') {
                     bat 'npm install'
                     bat 'npm test'  // Exécute les tests Jest
                 }
