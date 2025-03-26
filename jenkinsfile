@@ -17,17 +17,14 @@ pipeline {
         }
 
 
-        // Étape 3: Construction et publication du Backend
-        stage('Build Backend') {
+     stage('Install & Test Backend') {
             steps {
-                dir('back') {
-                    bat "docker build -t ${BACKEND_IMAGE} ."  // Utilise bat si sur Windows
-                    bat "echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin"
-                    bat "docker push ${BACKEND_IMAGE}"
+                dir('backend') {
+                    bat 'npm install'
+                    bat 'npm test'  // Exécute les tests Jest
                 }
             }
         }
-
      
     }
 }
