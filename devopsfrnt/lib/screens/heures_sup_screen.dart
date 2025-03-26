@@ -13,7 +13,6 @@ class _HeuresSupScreenState extends State<HeuresSupScreen> {
   String result = '';
   bool isLoading = false;
 
-  // Function to simulate the calculation of overtime hours
   void calculerHeuresSup() {
     setState(() => isLoading = true);
 
