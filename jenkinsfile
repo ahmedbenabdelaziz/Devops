@@ -15,17 +15,15 @@ pipeline {
             }
         }
 
-        // Étape 2: Installation des dépendances et tests pour le backend
         stage('Install & Test Backend') {
             steps {
                 dir('C:\\Users\\LENOVO\\OneDrive\\Desktop\\DEVOPS\\mon-projet-node') {
                     bat 'npm install'
-                    bat 'npm test'  // Exécute les tests Jest
+                    bat 'npm test' 
                 }
             }
         }
 
-        // Étape 3: Compilation du frontend Flutter
         stage('Build Frontend') {
             steps {
                 dir('C:\\Users\\LENOVO\\OneDrive\\Desktop\\DEVOPS\\devopsfrnt') {
