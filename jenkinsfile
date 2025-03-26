@@ -1,44 +1,57 @@
 pipeline {
     agent any
 
-    stages {
-        // Étape 1: Récupération du code
-        stage('Checkout Code') {
-            steps {
-                checkout([
-                    $class: 'GitSCM',
-                    branches: [[name: '*/main']],
-                    userRemoteConfigs: [[url: 'https://github.com/ahmedbenabdelaziz/Devops.git']]
-                ])
-            }
-        }
-
-        // Étape 2: Build Backend Node.js
-        stage('Build Backend') {
-            steps {
-                bat '''
-                    cd backend
-                    npm install
-                    npm run build
-                '''
-            }
-        }
-
-        // Étape 3: Build Frontend Flutter
-        stage('Build Frontend') {
-            steps {
-                bat '''
-                    cd frontend
-                    flutter pub get
-                    flutter build web
-                '''
-            }
-        }
+    environment {
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')
+        FRONTEND_IMAGE = "ahmedabdelaziz5357580/backend-app"
+        BACKEND_IMAGE = "ahmedabdelaziz5357580/backend-app"
+        REMOTE_SERVER = "user@serveur-distant"
     }
 
-    post {
-        always {
-            bat 'echo Pipeline terminé avec statut : %BUILD_STATUS%'
+    stages {
+        // Étape 1: Récupération du code source
+        stage('Checkout') {
+            steps {
+                git branch: 'main', 
+                url: 'https://github.com/votre-compte/votre-repo.git'
+            }
+        }
+
+        // Étape 2: Construction et publication du Frontend
+        stage('Build Frontend') {
+            steps {
+                dir('devopsfrnt') {
+                    sh "docker build -t ${FRONTEND_IMAGE} ."
+                    sh "echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin"
+                    sh "docker push ${FRONTEND_IMAGE}"
+                }
+            }
+        }
+
+        // Étape 3: Construction et publication du Backend
+        stage('Build Backend') {
+            steps {
+                dir('back') {
+                    sh "docker build -t ${BACKEND_IMAGE} ."
+                    sh "echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin"
+                    sh "docker push ${BACKEND_IMAGE}"
+                }
+            }
+        }
+
+        // Étape 4: Déploiement sur le serveur distant
+        stage('Deploy') {
+            steps {
+                sshagent(['ssh-key']) {
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} \
+                        "docker pull ${FRONTEND_IMAGE} && 
+                         docker pull ${BACKEND_IMAGE} &&
+                         docker-compose -f /chemin/vers/docker-compose.yml down &&
+                         docker-compose -f /chemin/vers/docker-compose.yml up -d"
+                    """
+                }
+            }
         }
     }
 }
