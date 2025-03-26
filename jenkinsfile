@@ -19,7 +19,7 @@ pipeline {
 
      stage('Install & Test Backend') {
             steps {
-                dir('mon-projet-node') {
+                dir('C:/Users/LENOVO/OneDrive/Desktop/DEVOPS/mon-projet-node') {
                     bat 'npm install'
                     bat 'npm test'  // Exécute les tests Jest
                 }
