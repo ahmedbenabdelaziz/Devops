@@ -2,6 +2,12 @@ pipeline {
     agent any
 
     stages {
+        stage('Checkout SCM') {
+            steps {
+                checkout scm
+            }
+        }
+
         stage('Cleanup') {
             steps {
                 cleanWs()
@@ -11,38 +17,37 @@ pipeline {
         stage('Checkout Code') {
             steps {
                 script {
-                    try {
-                        checkout scm
-                    } catch (Exception e) {
-                        error "Erreur lors du checkout: ${e}"
-                    }
+                    checkout([
+                        $class: 'GitSCM',
+                        branches: [[name: '*/main']],
+                        userRemoteConfigs: [[url: 'https://github.com/ahmedbenabdelaziz/Devops.git']]
+                    ])
                 }
             }
         }
 
         stage('Verify Files') {
             steps {
-                bat 'dir'  // Affiche le contenu du workspace pour voir si package.json est présent
+                script {
+                    bat 'dir'
+                }
             }
         }
 
         stage('Build Backend') {
             steps {
                 script {
-                    try {
-                        bat '''
-                            if exist package.json (
-                                echo "package.json trouvé, lancement de npm install"
-                                npm install
-                                npm run build
-                            ) else (
-                                echo "ERREUR: package.json introuvable!"
-                                exit /b 1
-                            )
-                        '''
-                    } catch (Exception e) {
-                        error "Erreur pendant la construction du backend: ${e}"
-                    }
+                    bat '''
+                    cd mon-projet-node
+                    if exist package.json (
+                        echo "package.json trouvé, lancement de npm install"  
+                        npm install  
+                        npm run build 
+                    ) else (
+                        echo "ERREUR: package.json introuvable!"  
+                        exit /b 1 
+                    ) 
+                    '''
                 }
             }
         }
