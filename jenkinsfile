@@ -30,29 +30,3 @@ pipeline {
             steps {
                 script {
                     // Afficher les fichiers dans le répertoire pour vérifier si le projet est bien cloné
-                    bat 'dir'
-                }
-            }
-        }
-
-        stage('Build Backend') {
-            steps {
-                script {
-                    // Naviguer vers le dossier du projet Node.js
-                    bat '''
-                    cd mon-projet-node
-                    echo "Vérification du dossier actuel: %cd%"
-                    if exist package.json (
-                        echo "package.json trouvé, lancement de npm install"
-                        npm install
-                        npm run build
-                    ) else (
-                        echo "ERREUR: package.json introuvable!"
-                        exit /b 1
-                    )
-                    '''
-                }
-            }
-        }
-    }
-}
