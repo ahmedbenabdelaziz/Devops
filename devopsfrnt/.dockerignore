@@ -1,4 +1,6 @@
-build
-.dart_tool
-.packages
-pubspec.lock
+**/android
+**/ios
+**/.dart_tool
+**/.pub-cache
+**/build
+**/*.lock
