@@ -16,6 +16,62 @@ pipeline {
             }
         }
 
-        // Vous pouvez ajouter d'autres stages ici si nécessaire.
+        stage('Install Dependencies') {
+            steps {
+                script {
+                    // Installation des dépendances avec npm
+                    sh 'npm install'
+                }
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                script {
+                    // Exécuter les tests avec Jest
+                    sh 'npm test'
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    // Construction de l'image Docker
+                    sh "docker build -t $IMAGE_NAME:latest ."
+                }
+            }
+        }
+
+        stage('Login to DockerHub') {
+            steps {
+                script {
+                    // Connexion à DockerHub avec les identifiants
+                    withCredentials([usernamePassword(credentialsId: DOCKER_HUB_CREDENTIALS, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+                    }
+                }
+            }
+        }
+
+        stage('Push to DockerHub') {
+            steps {
+                script {
+                    // Push de l'image Docker vers DockerHub
+                    sh "docker push $IMAGE_NAME:latest"
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            // Affichage d'un message en cas de succès
+            echo "✅ Pipeline exécuté avec succès !"
+        }
+        failure {
+            // Affichage d'un message en cas d'échec
+            echo "❌ Échec du pipeline ! Vérifie les logs."
+        }
     }
 }
