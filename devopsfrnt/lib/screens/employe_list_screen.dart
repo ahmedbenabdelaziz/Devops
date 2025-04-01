@@ -17,16 +17,18 @@ class _EmployeState extends State<Employe> {
     fetchEmployes();
   }
 
-  Future<void> fetchEmployes() async {
-    final response = await http.get(Uri.parse('http://localhost:8080/api/employes'));
-    if (response.statusCode == 200) {
-      setState(() {
-        employes = json.decode(response.body);
-      });
-    } else {
-      throw Exception('Failed to load employes');
-    }
+Future<void> fetchEmployes() async {
+  final response = await http.get(Uri.parse('http://127.0.0.1:5000/api/employees'));
+  if (response.statusCode == 200) {
+    setState(() {
+      employes = json.decode(response.body);
+      print("Données reçues : $employes");
+    });
+  } else {
+    print("Erreur : ${response.statusCode}");
+    throw Exception('Failed to load employes');
   }
+}
 
   @override
   Widget build(BuildContext context) {
