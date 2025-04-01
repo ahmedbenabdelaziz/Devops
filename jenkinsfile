@@ -9,59 +9,9 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/ahmedbenabdelaziz/Devops.git'
+               echo "dd"
             }
         }
 
-        stage('Install Dependencies') {
-            steps {
-                script {
-                    sh 'npm install'
-                }
-            }
-        }
-
-        stage('Run Tests') {
-            steps {
-                script {
-                    sh 'npm test' // Exécute Jest
-                }
-            }
-        }
-
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    sh "docker build -t $IMAGE_NAME:latest ."
-                }
-            }
-        }
-
-        stage('Login to DockerHub') {
-            steps {
-                script {
-                    withCredentials([usernamePassword(credentialsId: DOCKER_HUB_CREDENTIALS, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                        sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
-                    }
-                }
-            }
-        }
-
-        stage('Push to DockerHub') {
-            steps {
-                script {
-                    sh "docker push $IMAGE_NAME:latest"
-                }
-            }
-        }
-    }
-
-    post {
-        success {
-            echo "✅ Pipeline exécuté avec succès !"
-        }
-        failure {
-            echo "❌ Échec du pipeline ! Vérifie les logs."
-        }
-    }
+        
 }
