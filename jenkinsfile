@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_HUB_CREDENTIALS = 'finale-dockerhub'  // ID des credentials DockerHub
-        IMAGE_NAME = 'ahmedabdelaziz5357580/backend-app' // Remplace par ton repo DockerHub
+        DOCKER_HUB_CREDENTIALS = 'finale-dockerhub'  
+        IMAGE_NAME = 'ahmedabdelaziz5357580/backend-app' 
     }
 
     stages {
