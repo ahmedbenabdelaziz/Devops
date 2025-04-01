@@ -2,59 +2,66 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDENTIALS = credentials('finale-dockerhub')
-        FRONTEND_IMAGE = "ahmedabdelaziz5357580/frontend-app"
-        BACKEND_IMAGE = "ahmedabdelaziz5357580/backend-app"
-        REMOTE_SERVER = "user@serveur-distant"
+        DOCKER_HUB_CREDENTIALS = 'finale-dockerhub'  // ID des credentials DockerHub
+        IMAGE_NAME = 'ahmedabdelaziz5357580/backend-app' // Remplace par ton repo DockerHub
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/ahmedbenabdelaziz/Devops.git'
+                git 'https://github.com/ahmedbenabdelaziz/Devops.git'
             }
         }
 
-        stage('Install & Test Backend') {
+        stage('Install Dependencies') {
             steps {
-                dir('C:\\Users\\LENOVO\\OneDrive\\Desktop\\DEVOPS\\mon-projet-node') {
-                    bat 'npm install'
-                    bat 'npm test' 
+                script {
+                    sh 'npm install'
                 }
             }
         }
 
-        stage('Build Frontend') {
+        stage('Run Tests') {
             steps {
-                dir('C:\\Users\\LENOVO\\OneDrive\\Desktop\\DEVOPS\\devopsfrnt') {
-                    bat 'flutter clean'
-                    bat 'flutter pub get'
-                    bat 'flutter build web'
+                script {
+                    sh 'npm test' // Exécute Jest
                 }
-            }
-        }
-        stage('Build Docker Images') {
-            steps {
-                bat 'docker build -t %BACKEND_IMAGE% C:\\Users\\LENOVO\\OneDrive\\Desktop\\DEVOPS\\mon-projet-node'
-                bat 'docker build -t %FRONTEND_IMAGE% C:\\Users\\LENOVO\\OneDrive\\Desktop\\DEVOPS\\devopsfrnt'
             }
         }
 
-        stage('Push Docker Images') {
+        stage('Build Docker Image') {
             steps {
-                withDockerRegistry([credentialsId: 'finale-dockerhub', url: 'https://index.docker.io/v1/']) {
-                    bat 'docker push %BACKEND_IMAGE%'
-                    bat 'docker push %FRONTEND_IMAGE%'
+                script {
+                    sh "docker build -t $IMAGE_NAME:latest ."
                 }
             }
         }
-        stage('Deploy to Server') {
+
+        stage('Login to DockerHub') {
             steps {
-                bat '''
-                echo Déploiement sur le serveur distant...
-                plink -batch -ssh %REMOTE_SERVER% "cd /path/to/project/on/server && docker-compose down && docker pull %BACKEND_IMAGE% && docker pull %FRONTEND_IMAGE% && docker-compose up -d --build"
-                '''
+                script {
+                    withCredentials([usernamePassword(credentialsId: DOCKER_HUB_CREDENTIALS, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+                    }
+                }
             }
+        }
+
+        stage('Push to DockerHub') {
+            steps {
+                script {
+                    sh "docker push $IMAGE_NAME:latest"
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Pipeline exécuté avec succès !"
+        }
+        failure {
+            echo "❌ Échec du pipeline ! Vérifie les logs."
         }
     }
 }
