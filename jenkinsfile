@@ -6,14 +6,16 @@ pipeline {
         IMAGE_NAME = 'ahmedabdelaziz5357580/backend-app' 
     }
 
-  stage('Checkout') {
-    steps {
-        script {
-            // Effectuer le checkout du dépôt Git
-            git url: 'https://github.com/ahmedbenabdelaziz/Devops.git', branch: 'main'
+    stages {
+        stage('Checkout') {
+            steps {
+                script {
+                    // Effectuer le checkout du dépôt Git
+                    git url: 'https://github.com/ahmedbenabdelaziz/Devops.git', branch: 'main'
+                }
+            }
         }
+
+        // Vous pouvez ajouter d'autres stages ici si nécessaire.
     }
-}
-
-
 }
