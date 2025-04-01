@@ -1,9 +1,17 @@
-FROM cirrusci/flutter:latest AS build
-WORKDIR /app
-COPY . .
-RUN flutter pub get
-RUN flutter build web
-FROM nginx:alpine
-COPY --from=build /app/build/web /usr/share/nginx/html
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+# Utilisation de l'image officielle Flutter
+FROM ghcr.io/cirruslabs/flutter:latest  
+
+# Définir le répertoire de travail
+WORKDIR /app  
+
+# Copier les fichiers du projet
+COPY . .  
+
+# Installer les dépendances Flutter
+RUN flutter pub get  
+
+# Exposer le port utilisé par Flutter Web (3000 ou 8080)
+EXPOSE 8080  
+
+# Commande pour exécuter Flutter Web dans Chrome
+CMD ["flutter", "run", "-d", "chrome", "--web-port", "8080"]
