@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_HUB_CREDENTIALS = 'finale-dockerhub'  
-        IMAGE_NAME = 'ahmedabdelaziz5357580/backend-app' 
+        DOCKER_HUB_CREDENTIALS = 'finale-dockerhub'
+        IMAGE_NAME = 'ahmedabdelaziz5357580/backend-app'
     }
 
     stages {
@@ -20,7 +20,7 @@ pipeline {
             steps {
                 script {
                     // Installation des dépendances avec npm
-                    sh 'npm install'
+                    bat 'npm install' // Utilisation de la commande bat pour Windows
                 }
             }
         }
@@ -29,7 +29,7 @@ pipeline {
             steps {
                 script {
                     // Exécuter les tests avec Jest
-                    sh 'npm test'
+                    bat 'npm test' // Utilisation de la commande bat pour Windows
                 }
             }
         }
@@ -38,7 +38,7 @@ pipeline {
             steps {
                 script {
                     // Construction de l'image Docker
-                    sh "docker build -t $IMAGE_NAME:latest ."
+                    bat "docker build -t $IMAGE_NAME:latest ." // Utilisation de la commande bat pour Windows
                 }
             }
         }
@@ -48,7 +48,7 @@ pipeline {
                 script {
                     // Connexion à DockerHub avec les identifiants
                     withCredentials([usernamePassword(credentialsId: DOCKER_HUB_CREDENTIALS, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                        sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+                        bat "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin" // Utilisation de la commande bat pour Windows
                     }
                 }
             }
@@ -58,7 +58,7 @@ pipeline {
             steps {
                 script {
                     // Push de l'image Docker vers DockerHub
-                    sh "docker push $IMAGE_NAME:latest"
+                    bat "docker push $IMAGE_NAME:latest" // Utilisation de la commande bat pour Windows
                 }
             }
         }
