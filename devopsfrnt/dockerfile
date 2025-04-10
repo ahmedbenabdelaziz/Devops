@@ -1,17 +1,11 @@
-# Utilisation de l'image officielle Flutter
 FROM ghcr.io/cirruslabs/flutter:latest  
 
-# Définir le répertoire de travail
 WORKDIR /app  
 
-# Copier les fichiers du projet
 COPY . .  
 
-# Installer les dépendances Flutter
 RUN flutter pub get  
 
-# Exposer le port utilisé par Flutter Web (3000 ou 8080)
 EXPOSE 8080  
 
-# Commande pour exécuter Flutter Web dans Chrome
 CMD ["flutter", "run", "-d", "chrome", "--web-port", "8080"]
