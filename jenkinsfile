@@ -3,42 +3,65 @@ pipeline {
 
     environment {
         DOCKER_HUB_CREDENTIALS = 'finale-dockerhub'
-        IMAGE_NAME = 'ahmedabdelaziz5357580/backend-app'
+        BACKEND_IMAGE_NAME = 'ahmedabdelaziz5357580/backend-app'
+        FRONTEND_IMAGE_NAME = 'ahmedabdelaziz5357580/frontflutter-app'
+        SSH_HOST = '54.83.76.180'  // j'utiliser 
+        SSH_USER = 'ubuntu'        
     }
 
     stages {
         stage('Checkout') {
             steps {
                 script {
-                    // Effectuer le checkout du dépôt Git
                     git url: 'https://github.com/ahmedbenabdelaziz/Devops.git', branch: 'main'
                 }
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Install Backend Dependencies') {
             steps {
                 script {
-                    // Installation des dépendances avec npm
-                    bat 'npm install' // Utilisation de la commande bat pour Windows
+                    bat 'cd backend && npm install'  
                 }
             }
         }
 
-        stage('Run Tests') {
+        stage('Install Frontend Dependencies') {
             steps {
                 script {
-                    // Exécuter les tests avec Jest
-                    bat 'npm test' // Utilisation de la commande bat pour Windows
+                    bat 'cd frontend && flutter pub get'  
                 }
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Run Backend Tests') {
             steps {
                 script {
-                    // Construction de l'image Docker
-                    bat "docker build -t $IMAGE_NAME:latest ." // Utilisation de la commande bat pour Windows
+                    bat 'cd backend && npm test' 
+                }
+            }
+        }
+
+        stage('Run Frontend Tests') {
+            steps {
+                script {
+                    bat 'cd frontend && flutter test' 
+                }
+            }
+        }
+
+        stage('Build Backend Docker Image') {
+            steps {
+                script {
+                    bat "docker build -t $BACKEND_IMAGE_NAME:latest ./backend"  
+                }
+            }
+        }
+
+        stage('Build Frontend Docker Image') {
+            steps {
+                script {
+                    bat "docker build -t $FRONTEND_IMAGE_NAME:latest ./frontend"  
                 }
             }
         }
@@ -46,19 +69,69 @@ pipeline {
         stage('Login to DockerHub') {
             steps {
                 script {
-                    // Connexion à DockerHub avec les identifiants
                     withCredentials([usernamePassword(credentialsId: DOCKER_HUB_CREDENTIALS, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                        bat "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin" // Utilisation de la commande bat pour Windows
+                        bat "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin" 
                     }
                 }
             }
         }
 
-        stage('Push to DockerHub') {
+        stage('Push Backend to DockerHub') {
             steps {
                 script {
-                    // Push de l'image Docker vers DockerHub
-                    bat "docker push $IMAGE_NAME:latest" // Utilisation de la commande bat pour Windows
+                    bat "docker push $BACKEND_IMAGE_NAME:latest"  
+                }
+            }
+        }
+
+        stage('Push Frontend to DockerHub') {
+            steps {
+                script {
+                    bat "docker push $FRONTEND_IMAGE_NAME:latest"  
+                }
+            }
+        }
+
+        // Déploiement du Backend sur le serveur Ubuntu en utilisant SSH avec la clé privée
+        stage('Deploy Backend to Server') {
+            steps {
+                script {
+                    // Utilisation de la clé SSH dans Jenkins pour se connecter à l'instance EC2
+                    withCredentials([sshUserPrivateKey(credentialsId: 'aws-ssh-key', keyFileVariable: 'SSH_PRIVATE_KEY')]) {
+                        sh '''
+                            ssh -i $SSH_PRIVATE_KEY $SSH_USER@$SSH_HOST << 'EOF'
+                            cd /home/ubuntu/backend-project
+                            docker pull $BACKEND_IMAGE_NAME:latest
+                            docker-compose up -d
+                            EOF
+                        '''
+                    }
+                }
+            }
+        }
+
+        // Déploiement du Frontend sur le serveur Ubuntu en utilisant SSH avec la clé privée
+        stage('Deploy Frontend to Server') {
+            steps {
+                script {
+                    withCredentials([sshUserPrivateKey(credentialsId: 'aws-ssh-key', keyFileVariable: 'SSH_PRIVATE_KEY')]) {
+                        sh '''
+                            ssh -i $SSH_PRIVATE_KEY $SSH_USER@$SSH_HOST << 'EOF'
+                            cd /home/ubuntu/frontend-project
+                            docker pull $FRONTEND_IMAGE_NAME:latest
+                            docker-compose up -d
+                            EOF
+                        '''
+                    }
+                }
+            }
+        }
+
+        // Tests unitaires via JUnit
+        stage('JUnit Test') {
+            steps {
+                script {
+                    bat 'cd backend && npm run test:ci'  
                 }
             }
         }
@@ -66,12 +139,10 @@ pipeline {
 
     post {
         success {
-            // Affichage d'un message en cas de succès
-            echo "✅ Pipeline exécuté avec succès !"
+            echo "Pipeline exécuté avec succès !"
         }
         failure {
-            // Affichage d'un message en cas d'échec
-            echo "❌ Échec du pipeline ! Vérifie les logs."
+            echo "Échec du pipeline, veuillez vérifier les logs."
         }
     }
 }
