@@ -9,7 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  http: ^1.3.0
+  http: ^0.13.5
+  flutter_dotenv: ^5.0.2
   cupertino_icons: ^1.0.8
 
 dev_dependencies:
@@ -19,3 +20,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/images/shutterstock_721758364.png
