@@ -5,7 +5,7 @@ pipeline {
         DOCKER_HUB_CREDENTIALS = 'finale-dockerhub'
         BACKEND_IMAGE_NAME = 'ahmedabdelaziz5357580/backend-app'
         FRONTEND_IMAGE_NAME = 'ahmedabdelaziz5357580/frontflutter-app'
-        SSH_HOST = '54.83.76.180'  // j'utiliser 
+        SSH_HOST = '54.83.76.180'  // J'utilise ici une instance EC2 Ubuntu (AWS Cloud)
         SSH_USER = 'ubuntu'        
     }
 
@@ -92,7 +92,7 @@ pipeline {
             }
         }
 
-        // Déploiement du Backend sur le serveur Ubuntu en utilisant SSH avec la clé privée
+        // j'utilise ici ssh a la place de bat car sur cloud aws (ec2 ubntnu)
         stage('Deploy Backend to Server') {
             steps {
                 script {
@@ -110,7 +110,7 @@ pipeline {
             }
         }
 
-        // Déploiement du Frontend sur le serveur Ubuntu en utilisant SSH avec la clé privée
+        // Déploiement du Frontend sur le serveur Ubuntu(cloud aws ) en utilisant SSH avec la clé privée
         stage('Deploy Frontend to Server') {
             steps {
                 script {
@@ -139,10 +139,10 @@ pipeline {
 
     post {
         success {
-            echo "Pipeline exécuté avec succès !"
+            echo " succes"
         }
         failure {
-            echo "Échec du pipeline, veuillez vérifier les logs."
+            echo "echec"
         }
     }
 }
