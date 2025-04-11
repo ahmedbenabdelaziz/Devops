@@ -1,5 +1,6 @@
 pipeline {
     agent any
+//// deploiement SSH sur EC2 Ubuntu (Cloud aws), autres etapes sur mon pc Windows
 
     environment {
         DOCKER_HUB_CREDENTIALS = 'finale-dockerhub'
@@ -21,7 +22,7 @@ pipeline {
         stage('Install Backend Dependencies') {
             steps {
                 script {
-                    bat 'cd backend && npm install'  
+                    bat 'cd back && npm install' 
                 }
             }
         }
@@ -29,7 +30,7 @@ pipeline {
         stage('Install Frontend Dependencies') {
             steps {
                 script {
-                    bat 'cd frontend && flutter pub get'  
+                    bat 'cd devopsfrnt && flutter pub get'  
                 }
             }
         }
@@ -37,7 +38,7 @@ pipeline {
         stage('Run Backend Tests') {
             steps {
                 script {
-                    bat 'cd backend && npm test' 
+                    bat 'cd back && npm test'  
                 }
             }
         }
@@ -45,7 +46,7 @@ pipeline {
         stage('Run Frontend Tests') {
             steps {
                 script {
-                    bat 'cd frontend && flutter test' 
+                    bat 'cd devopsfrnt && flutter test'  
                 }
             }
         }
@@ -53,7 +54,7 @@ pipeline {
         stage('Build Backend Docker Image') {
             steps {
                 script {
-                    bat "docker build -t $BACKEND_IMAGE_NAME:latest ./backend"  
+                    bat "docker build -t $BACKEND_IMAGE_NAME:latest ./mon-projetbackend" 
                 }
             }
         }
@@ -61,7 +62,7 @@ pipeline {
         stage('Build Frontend Docker Image') {
             steps {
                 script {
-                    bat "docker build -t $FRONTEND_IMAGE_NAME:latest ./frontend"  
+                    bat "docker build -t $FRONTEND_IMAGE_NAME:latest ./devopsfrnt"  
                 }
             }
         }
@@ -70,7 +71,7 @@ pipeline {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: DOCKER_HUB_CREDENTIALS, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                        bat "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin" 
+                        bat "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"  // Sur Windows
                     }
                 }
             }
@@ -87,20 +88,19 @@ pipeline {
         stage('Push Frontend to DockerHub') {
             steps {
                 script {
-                    bat "docker push $FRONTEND_IMAGE_NAME:latest"  
+                    bat "docker push $FRONTEND_IMAGE_NAME:latest" 
                 }
             }
         }
 
-        // j'utilise ici ssh a la place de bat car sur cloud aws (ec2 ubntnu)
+        // Déploiement Backend sur EC2 (Linux Ubuntu)
         stage('Deploy Backend to Server') {
             steps {
                 script {
-                    // Utilisation de la clé SSH dans Jenkins pour se connecter à l'instance EC2
                     withCredentials([sshUserPrivateKey(credentialsId: 'aws-ssh-key', keyFileVariable: 'SSH_PRIVATE_KEY')]) {
                         sh '''
                             ssh -i $SSH_PRIVATE_KEY $SSH_USER@$SSH_HOST << 'EOF'
-                            cd /home/ubuntu/backend-project
+                            cd /home/ubuntu/mon-projetbackend  # Vérifie le chemin sur ton serveur EC2
                             docker pull $BACKEND_IMAGE_NAME:latest
                             docker-compose up -d
                             EOF
@@ -110,14 +110,14 @@ pipeline {
             }
         }
 
-        // Déploiement du Frontend sur le serveur Ubuntu(cloud aws ) en utilisant SSH avec la clé privée
+        // Déploiement Frontend sur EC2 (Linux Ubuntu)
         stage('Deploy Frontend to Server') {
             steps {
                 script {
                     withCredentials([sshUserPrivateKey(credentialsId: 'aws-ssh-key', keyFileVariable: 'SSH_PRIVATE_KEY')]) {
                         sh '''
                             ssh -i $SSH_PRIVATE_KEY $SSH_USER@$SSH_HOST << 'EOF'
-                            cd /home/ubuntu/frontend-project
+                            cd /home/ubuntu/devopsfrnt  # Vérifie le chemin sur ton serveur EC2
                             docker pull $FRONTEND_IMAGE_NAME:latest
                             docker-compose up -d
                             EOF
@@ -127,11 +127,11 @@ pipeline {
             }
         }
 
-        // Tests unitaires via JUnit
+        // Tests unitaires via JUnit pour le Backend
         stage('JUnit Test') {
             steps {
                 script {
-                    bat 'cd backend && npm run test:ci'  
+                    bat 'cd back && npm run test:ci'  
                 }
             }
         }
@@ -139,10 +139,10 @@ pipeline {
 
     post {
         success {
-            echo " succes"
+            echo "success"
         }
         failure {
-            echo "echec"
+            echo "failure"
         }
     }
 }
